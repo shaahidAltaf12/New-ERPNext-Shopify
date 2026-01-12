@@ -3,7 +3,7 @@ import frappe
 import json
 
 @frappe.whitelist()
-def create_shopify_order(customer_email, items, shopify_url):
+def create_shopify_order(customer_email, items, shopify_url,access_token,sales_order_name=None):
     
     items = json.loads(items)
     print(items)
@@ -37,21 +37,41 @@ def create_shopify_order(customer_email, items, shopify_url):
         }
     }
 
-    payload_json = json.dumps(payload)
-
-    endpoint = 'orders.json'
-    # Shopify API headers and endpoint
     headers = {
         "Content-Type": "application/json",
+        "X-Shopify-Access-Token": access_token
     }
-    final_url = shopify_url + endpoint
 
-    # Send the POST request to create the product
-    response = requests.post(final_url, data=payload_json, headers=headers)
+    final_url = f"{shopify_url}orders.json"
+
+    response = requests.post(final_url, json=payload, headers=headers)
 
     if response.status_code == 201:
-        frappe.msgprint(f"Order created in Shopify.")
+        frappe.msgprint("Order created in Shopify.")
+        shopify_order = response.json().get("order")
+        if shopify_order and sales_order_name:
+            # Save Shopify order ID to Sales Order
+            frappe.db.set_value("Sales Order", sales_order_name, "shopify_order_id", shopify_order.get("id"))
     else:
-        frappe.msgprint("Failed to create the order in Shopify. Error: {response.content}")
-        print(response.status_code)
+        frappe.msgprint(f"Failed to create the order in Shopify. Error: {response.content}")
 
+def on_submit(doc, method):
+    customer_doc = frappe.get_doc("Customer", doc.customer)
+    customer_email = customer_doc.email_id
+    items = []
+    for item in doc.items:
+        item_dict = {
+            "title": item.name,
+            "price": float(item.rate),
+            "quantity": int(item.qty),
+            "product_id": getattr(item, "shopify_product_id", ""),
+            "sku": item.item_code
+        }
+        items.append(item_dict)
+    
+    shopify_doc = frappe.get_doc(
+        "Shopify Access",
+        frappe.get_value("Shopify Access", {}, "name")  # first Shopify Access record
+    )
+    
+    create_shopify_order(customer_email, json.dumps(items), shopify_doc.shopify_url, shopify_doc.access_token,sales_order_name=doc.name)

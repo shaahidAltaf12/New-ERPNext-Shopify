@@ -3,26 +3,27 @@ import frappe
 import json
 
 @frappe.whitelist()
-def cancel_shopify_order(orderID, shopify_url):
+def cancel_shopify_order(orderID, shopify_url,access_token):
 
-    endpoint = 'orders/' + str(orderID) + '/cancel.json'
     # Shopify API headers and endpoint
     headers = {
         "Content-Type": "application/json",
+        "X-Shopify-Access-Token": access_token
     }
-    final_url = shopify_url + endpoint
+    final_url = f"{shopify_url}orders/{orderID}/cancel.json"
 
     # Send the POST request to create the product
     response = requests.post(final_url, headers=headers)
 
     if response.status_code == 200:
-        frappe.msgprint(f"Customer record was successfully cancelled in Shopify.")
+        frappe.msgprint(f"Order was successfully cancelled in Shopify.")
     else:
-        frappe.msgprint("Failed to delete the customer in Shopify. Error: {response.content}")
+        frappe.msgprint(f"Failed to delete the order in Shopify. Error: {response.content}")
 
 # Attach the custom function to the 'Item' doctype's on_submit event
 def on_submit(doc, method):
-    cancel_shopify_order(doc.order_id, doc.api_link)
-
-# Ensure the on_submit function is triggered when an 'Item' document is submitted
-frappe.get_doc('DocType', 'Sales Order').on_submit = on_submit
+    shopify_doc = frappe.get_doc(
+        "Shopify Access",
+        frappe.get_value("Shopify Access", {}, "name")
+    )
+    cancel_shopify_order(doc.shopify_order_id, shopify_doc.shopify_url, shopify_doc.access_token)

@@ -3,7 +3,7 @@ import frappe
 import json
 
 @frappe.whitelist()
-def update_shopify_order(orderID, status, shopify_url):
+def update_shopify_order(orderID, status, shopify_url,access_token):
 
     paid_status = ""
     fulfil_status = ""
@@ -29,12 +29,13 @@ def update_shopify_order(orderID, status, shopify_url):
 
     payload_json = json.dumps(payload)
 
-    endpoint = 'orders/' + str(orderID) + '.json'
-    final_url = shopify_url + endpoint
-
     headers = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": access_token
     }
+
+    final_url = f"{shopify_url}orders.json"
+
 
     try:
         # Send the PUT request to create the product
@@ -53,7 +54,11 @@ def update_shopify_order(orderID, status, shopify_url):
 
 # Attach the custom function to the 'Item' doctype's on_submit event
 def on_submit(doc, method):
-    update_shopify_order(doc.order_id, doc.workflow_state, doc.api_link)
+    shopify_doc = frappe.get_doc(
+        "Shopify Access",
+        frappe.get_value("Shopify Access", {}, "name")  # first Shopify Access record
+    )
+    update_shopify_order(doc.shopify_order_id, doc.state, shopify_doc.shopify_url, shopify_doc.access_token)
 
 # Ensure the on_submit function is triggered when an 'Item' document is submitted
 frappe.get_doc('DocType', 'Sales Order').on_submit = on_submit
