@@ -105,7 +105,6 @@
       "fieldname": "shopify_url",
       "fieldtype": "Data",
       "label": "Shopify API URL",
-      "read-only": 0,
       "reqd": 0,
       "unique": 1
     },
