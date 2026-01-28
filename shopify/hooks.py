@@ -103,10 +103,13 @@ doc_events = {
         
     },
     "Sales Order": {
-		"on_submit": "shopify.create_order.on_submit",
+		"before_insert": "shopify.create_order.clear_shopify_id_on_amend",
+		"on_save": "shopify.create_order.on_submit",
         "on_update": "shopify.update_order.on_submit",
 		"on_cancel": "shopify.cancel_order.on_submit",
-		"on_trash": "shopify.delete_order.on_submit"
+		"on_trash": "shopify.delete_order.on_submit",
+
+        
 	},
     "Customer": {
 		"after_insert": "shopify.create_customer.on_submit",
@@ -121,9 +124,14 @@ scheduler_events = {
 	#],
 
 	"all": [
-        "shopify.retrieve_order.test_scheduler_event",
-        
+        "shopify.automated_orders.execute",
+        "shopify.retrieve_order.scheduled_retrieve_shopify_orders",
+        "shopify.retrieve_customer.on_submit",
+        "shopify.retrieve_order.scheduled_retrieve_shopify_orders",
+        "shopify.retrieve_product.on_submit"
+
 	]
+    
 	#"weekly": [
 	#	"shopify.tasks.weekly"
 	#],

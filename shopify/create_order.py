@@ -18,7 +18,7 @@ def create_shopify_order(customer_email, items, shopify_url, access_token, sales
             "sku": item.get("sku"),
             "tax_lines": [
                 {
-                    "price": item.get("price") / 10,
+                    "price": item.get("price")/10,
                     "rate": 0.1,
                     "title": "SST",
                 }
@@ -83,3 +83,9 @@ def on_submit(doc, method):
     shopify_order_id= create_shopify_order(customer_email, json.dumps(items), shopify_doc.shopify_url, shopify_doc.access_token,sales_order_name=doc.name)
 
     doc.db_set("shopify_order_id", shopify_order_id)
+
+def clear_shopify_id_on_amend(doc, method):
+    if doc.amended_from:
+        doc.shopify_order_id = None
+        doc.db_set("shopify_order_id", None)
+        

@@ -11,6 +11,12 @@ def update_shopify_order(orderID, status, shopify_url,access_token):
     if status == "To Deliver":
         paid_status = "paid"
         fulfil_status = "unfulfilled"
+    elif status == "To Deliver and Bill":
+        paid_status = "pending"
+        fulfil_status = "unfulfilled"
+    elif status == "Draft":
+        paid_status = "pending"
+        fulfil_status = "unfulfilled"
     elif status == "Completed":
         paid_status = "paid"
         fulfil_status = "fulfilled"
@@ -54,11 +60,18 @@ def update_shopify_order(orderID, status, shopify_url,access_token):
 
 # Attach the custom function to the 'Item' doctype's on_submit event
 def on_submit(doc, method):
+
+    if not doc.shopify_order_id:
+        return
+    
+    if doc.amended_from:
+        return
+
     shopify_doc = frappe.get_doc(
         "Shopify Access",
         frappe.get_value("Shopify Access", {}, "name")  # first Shopify Access record
     )
-    update_shopify_order(doc.shopify_order_id, doc.state, shopify_doc.shopify_url, shopify_doc.access_token)
+    update_shopify_order(doc.shopify_order_id, doc.status, shopify_doc.shopify_url, shopify_doc.access_token)
 
 # Ensure the on_submit function is triggered when an 'Item' document is submitted
 frappe.get_doc('DocType', 'Sales Order').on_submit = on_submit

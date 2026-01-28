@@ -51,6 +51,8 @@ def create_shopify_customer(firstName, lastName, mobileNum, emailID, address, ad
         )
         frappe.throw("Failed to create customer in Shopify")
 
+    frappe.msgprint(f"Customer {firstName}created in Shopify.")
+
     customer = response.json()["customer"]
 
     return customer["id"]

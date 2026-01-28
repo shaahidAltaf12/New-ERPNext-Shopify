@@ -23,7 +23,7 @@ def update_shopify_product(productId,itemCode, itemName, itemStatus, itemDescrip
                 "weight": unitWeight,
                 "weight_unit": "kg",
                 "inventory_management": "shopify",
-                "inventory_quantity": inventoryNum
+                "inventory_quantity": int(inventoryNum)
             }]
         }
     }
