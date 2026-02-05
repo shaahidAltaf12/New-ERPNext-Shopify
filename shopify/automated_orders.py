@@ -12,5 +12,7 @@ def execute():
         api_link = shopify_doc.shopify_url
         retrieve_shopify_orders(api_key, api_token, api_link)
         frappe.msgprint("Hourly Orders Updated")
+        frappe.log_error("Hourly Orders Updated", "Shopify Automated Orders Execution")
     except Exception as e:
         frappe.msgprint(f"Error in hourly execute function: {e}")
+        frappe.log_error(frappe.get_traceback(), "Shopify Automated Orders Execution Error")
